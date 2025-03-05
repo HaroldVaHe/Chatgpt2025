@@ -1,0 +1,32 @@
+// Import the functions you need from the SDKs you need
+import { getAnalytics } from "firebase/analytics";
+import { initializeApp } from "firebase/app";
+import { collection, getDocs, getFirestore } from 'firebase/firestore/lite';
+
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+    apiKey: "AIzaSyAu_1JZNU_THUwapKkeecNOnlzv-jPvwYI",
+    authDomain: "chatgpt2025-2f05c.firebaseapp.com",
+    projectId: "chatgpt2025-2f05c",
+    storageBucket: "chatgpt2025-2f05c.firebasestorage.app",
+    messagingSenderId: "832896693731",
+    appId: "1:832896693731:web:052ce40b2619355aee5cd6",
+    measurementId: "G-CM3QC9C2SY"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+export const db = getFirestore(app);
+
+// Get a list of cities from your database
+async function getChats(db) {
+    const Chats = collection(db, 'Chats');
+    const ChatsSnapshot = await getDocs(Chats);
+    const ChatsList = ChatsSnapshot.docs.map(doc => doc.data());
+    return ChatsList;
+}
