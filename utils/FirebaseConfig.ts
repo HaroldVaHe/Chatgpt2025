@@ -23,8 +23,8 @@ const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 export const db = getFirestore(app);
 
-export
-async function getChats(db) {
+
+async function getChats() {
     const Chats = collection(db, 'Chats');
     const ChatsSnapshot = await getDocs(Chats);
     const ChatsList = ChatsSnapshot.docs.map(doc => doc.data());

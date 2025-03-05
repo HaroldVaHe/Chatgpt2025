@@ -1,9 +1,11 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useState } from 'react';
+import { addDoc, collection, getDocs, Timestamp } from 'firebase/firestore/lite';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { Message } from '../interfaces/AppInterfaces';
 import { APIresponse } from '../interfaces/Responses';
+import { db } from '../utils/FirebaseConfig';
 
 export default function ChatScreen() {
     const navigation = useNavigation();
@@ -11,6 +13,19 @@ export default function ChatScreen() {
     const [isLoading, setIsLoading] = useState(false);
     const [messages, setMessages] = useState<Message[]>([]);
     const [error, setError] = useState('');
+
+    useEffect(() => {
+        const fetchMessages = async () => {
+            const messagesSnapshot = await getDocs(collection(db, 'Chats'));
+            const messagesList = messagesSnapshot.docs.map(doc => {
+                const data = doc.data() as Message;
+                return { ...data, date: data.date ? data.date.toDate() : new Date() };
+            });
+            setMessages(messagesList);
+        };
+
+        fetchMessages();
+    }, []);
 
     const getResponse = async () => {
         if (!message.trim()) return;
@@ -37,6 +52,10 @@ export default function ChatScreen() {
             const botMessage: Message = { text: botText, senderby: 'Bot', date: new Date() };
 
             setMessages(prevMessages => [...prevMessages, botMessage]);
+
+            // Almacenar mensajes en Firestore
+            await addDoc(collection(db, 'Chats'), { ...newMessage, date: Timestamp.fromDate(newMessage.date) });
+            await addDoc(collection(db, 'Chats'), { ...botMessage, date: Timestamp.fromDate(botMessage.date) });
         } catch (error) {
             setError('Hubo un error al obtener la respuesta.');
             console.error('Error:', error);

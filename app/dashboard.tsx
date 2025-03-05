@@ -1,8 +1,30 @@
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { collection, getDocs } from 'firebase/firestore/lite';
+import React, { useEffect, useState } from 'react';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
+import { Message } from '../interfaces/AppInterfaces';
+import { db } from '../utils/FirebaseConfig';
 
 export default function Dashboard() {
+    const [chats, setChats] = useState<Message[]>([]);
+
+    useEffect(() => {
+        const fetchChats = async () => {
+            const chatsSnapshot = await getDocs(collection(db, 'Chats'));
+            const chatsList = chatsSnapshot.docs.map(doc => {
+                const data = doc.data() as Message;
+                return { ...data, date: data.date ? data.date.toDate() : new Date() };
+            });
+            setChats(chatsList);
+        };
+
+        fetchChats();
+    }, []);
+
+    const isValidDate = (date: any) => {
+        return date instanceof Date && !isNaN(date.getTime());
+    };
+
     return (
         <View style={styles.container}>
             {/* Nueva conversación */}
@@ -14,6 +36,18 @@ export default function Dashboard() {
 
             {/* Separador */}
             <View style={styles.separator} />
+
+            {/* Historial de conversaciones */}
+            <FlatList
+                data={chats}
+                keyExtractor={(item, index) => item.text + index}
+                renderItem={({ item }) => (
+                    <View style={styles.chatItem}>
+                        <Text style={styles.chatText}>{item.text}</Text>
+                        <Text style={styles.chatDate}>{isValidDate(item.date) ? item.date.toISOString() : 'Invalid Date'}</Text>
+                    </View>
+                )}
+            />
 
             {/* Opciones */}
             <TouchableOpacity style={styles.option}>
@@ -96,5 +130,20 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#f44336',
         marginLeft: 10,
+    },
+    chatItem: {
+        backgroundColor: '#2C2C3A',
+        padding: 10,
+        borderRadius: 10,
+        marginVertical: 5,
+    },
+    chatText: {
+        color: 'white',
+        fontSize: 16,
+    },
+    chatDate: {
+        color: '#888',
+        fontSize: 12,
+        marginTop: 5,
     },
 });
