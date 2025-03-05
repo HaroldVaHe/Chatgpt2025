@@ -23,7 +23,7 @@ const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 export const db = getFirestore(app);
 
-// Get a list of cities from your database
+export
 async function getChats(db) {
     const Chats = collection(db, 'Chats');
     const ChatsSnapshot = await getDocs(Chats);
