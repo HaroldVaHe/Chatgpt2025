@@ -1,7 +1,9 @@
 // Import the functions you need from the SDKs you need
+import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 import { getAnalytics } from "firebase/analytics";
 import { initializeApp } from "firebase/app";
-import { collection, getDocs, getFirestore } from 'firebase/firestore/lite';
+import { getReactNativePersistence, initializeAuth } from "firebase/auth";
+import { getFirestore } from 'firebase/firestore/lite';
 
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -30,10 +32,9 @@ if (typeof window !== "undefined") {
 
 export { analytics };
 
+// Inicializar Auth
+export const auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(ReactNativeAsyncStorage),
+});
 
-async function getChats() {
-    const Chats = collection(db, 'Conversations');
-    const ChatsSnapshot = await getDocs(Chats);
-    const ChatsList = ChatsSnapshot.docs.map(doc => doc.data());
-    return ChatsList;
-}
+
