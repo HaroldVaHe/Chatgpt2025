@@ -1,25 +1,32 @@
 import { useNavigation } from '@react-navigation/native';
 import { addDoc, collection, getDocs, Timestamp } from 'firebase/firestore/lite';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, Text, TextInput, TouchableOpacity, View, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { Message } from '../interfaces/AppInterfaces';
 import { APIresponse } from '../interfaces/Responses';
 import { db } from '../utils/FirebaseConfig';
 
+interface MessageWithKey extends Message {
+    key: string;
+}
+
 export default function ChatScreen() {
     const navigation = useNavigation();
     const [message, setMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [messages, setMessages] = useState<Message[]>([]);
+    const [messages, setMessages] = useState<MessageWithKey[]>([]);
     const [error, setError] = useState('');
 
     useEffect(() => {
         const fetchMessages = async () => {
-            const messagesSnapshot = await getDocs(collection(db, 'Chats'));
+            const messagesSnapshot = await getDocs(collection(db, 'Conversations'));
             const messagesList = messagesSnapshot.docs.map(doc => {
-                const data = doc.data() as Message;
-                return { ...data, date: data.date ? data.date.toDate() : new Date() };
+                const data = doc.data() as MessageWithKey;
+                return { 
+                    ...data, 
+                    date: data.date instanceof Timestamp ? data.date.toDate() : new Date() 
+                };
             });
             setMessages(messagesList);
         };
@@ -30,7 +37,7 @@ export default function ChatScreen() {
     const getResponse = async () => {
         if (!message.trim()) return;
         
-        const newMessage: Message = { text: message, senderby: 'Me', date: new Date() };
+        const newMessage: MessageWithKey = { text: message, senderby: 'Me', date: new Date(), key: Date.now().toString() };
         setMessages(prevMessages => [...prevMessages, newMessage]);
         setMessage('');
         setIsLoading(true);
@@ -49,13 +56,13 @@ export default function ChatScreen() {
             
             const data: APIresponse = await response.json();
             const botText = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'No response';
-            const botMessage: Message = { text: botText, senderby: 'Bot', date: new Date() };
+            const botMessage: MessageWithKey = { text: botText, senderby: 'Bot', date: new Date(), key: Date.now().toString() };
 
             setMessages(prevMessages => [...prevMessages, botMessage]);
 
             // Almacenar mensajes en Firestore
-            await addDoc(collection(db, 'Chats'), { ...newMessage, date: Timestamp.fromDate(newMessage.date) });
-            await addDoc(collection(db, 'Chats'), { ...botMessage, date: Timestamp.fromDate(botMessage.date) });
+            await addDoc(collection(db, 'Conversations'), { ...newMessage, date: Timestamp.fromDate(newMessage.date) });
+            await addDoc(collection(db, 'Conversations'), { ...botMessage, date: Timestamp.fromDate(botMessage.date) });
         } catch (error) {
             setError('Hubo un error al obtener la respuesta.');
             console.error('Error:', error);
@@ -110,17 +117,15 @@ export default function ChatScreen() {
     );
 }
 
-const styles = {
+const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#1E1E2C',
-        padding: 10,
-        justifyContent: 'space-between' as const,
+        backgroundColor: '#fff',
     },
     header: {
-        flexDirection: 'row' as const,
+        flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center' as const,
+        alignItems: 'center',
         paddingVertical: 10,
     },
     userMessage: {
@@ -145,12 +150,12 @@ const styles = {
     },
     errorText: {
         color: 'red',
-        textAlign: 'center' as const,
+        textAlign: 'center',
         marginVertical: 5,
     },
     inputContainer: {
-        flexDirection: 'row' as const,
-        alignItems: 'center' as const,
+        flexDirection: 'row',
+        alignItems: 'center',
         backgroundColor: '#2C2C3A',
         borderRadius: 25,
         paddingHorizontal: 15,
@@ -168,4 +173,4 @@ const styles = {
         borderRadius: 20,
         marginLeft: 10,
     },
-};
+});
