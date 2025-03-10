@@ -3,4 +3,5 @@ export interface Message {
     date: Date;
     senderby: "Me" | "Bot";
 
+    
 }

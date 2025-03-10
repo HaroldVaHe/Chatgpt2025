@@ -1,21 +1,38 @@
-import { collection, getDocs } from 'firebase/firestore/lite';
+import { collection, getDocs, Timestamp } from 'firebase/firestore/lite';
 import React, { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { Message } from '../interfaces/AppInterfaces';
 import { db } from '../utils/FirebaseConfig';
 
+interface Chat {
+    id: string;
+    firstMessage: string;
+    date: Date;
+}
+
 export default function Dashboard() {
-    const [chats, setChats] = useState<Message[]>([]);
+    const [chats, setChats] = useState<Chat[]>([]);
 
     useEffect(() => {
         const fetchChats = async () => {
-            const chatsSnapshot = await getDocs(collection(db, 'Chats'));
-            const chatsList = chatsSnapshot.docs.map(doc => {
+            const chatsSnapshot = await getDocs(collection(db, 'Conversations'));
+            const chatsMap = new Map<string, Chat>();
+
+            chatsSnapshot.docs.forEach(doc => {
                 const data = doc.data() as Message;
-                return { ...data, date: data.date ? data.date.toDate() : new Date() };
+                const chatId = doc.id; // Asumiendo que cada documento tiene un ID único
+
+                if (!chatsMap.has(chatId)) {
+                    chatsMap.set(chatId, {
+                        id: chatId,
+                        firstMessage: data.text,
+                        date: data.date instanceof Timestamp ? data.date.toDate() : new Date()
+                    });
+                }
             });
-            setChats(chatsList);
+
+            setChats(Array.from(chatsMap.values()));
         };
 
         fetchChats();
@@ -40,10 +57,10 @@ export default function Dashboard() {
             {/* Historial de conversaciones */}
             <FlatList
                 data={chats}
-                keyExtractor={(item, index) => item.text + index}
+                keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
                     <View style={styles.chatItem}>
-                        <Text style={styles.chatText}>{item.text}</Text>
+                        <Text style={styles.chatText}>{item.firstMessage}</Text>
                         <Text style={styles.chatDate}>{isValidDate(item.date) ? item.date.toISOString() : 'Invalid Date'}</Text>
                     </View>
                 )}

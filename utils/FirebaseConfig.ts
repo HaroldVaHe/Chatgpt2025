@@ -20,12 +20,19 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+
 export const db = getFirestore(app);
+// Inicializar Analytics solo en el navegador
+let analytics;
+if (typeof window !== "undefined") {
+    analytics = getAnalytics(app);
+}
+
+export { analytics };
 
 
 async function getChats() {
-    const Chats = collection(db, 'Chats');
+    const Chats = collection(db, 'Conversations');
     const ChatsSnapshot = await getDocs(Chats);
     const ChatsList = ChatsSnapshot.docs.map(doc => doc.data());
     return ChatsList;
