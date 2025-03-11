@@ -79,7 +79,7 @@ export default function Dashboard() {
                 renderItem={({ item }) => (
                     <TouchableOpacity style={styles.chatItem} onPress={() => router.push(`/chatScreen?chatId=${item.id}`)}>
                         <Text style={styles.chatText}>{item.firstMessage}</Text>
-                        <Text style={styles.chatDate}>{isValidDate(item.date) ? item.date.toISOString() : 'Invalid Date'}</Text>
+                     { /*<Text style={styles.chatDate}>{isValidDate(item.date) ? item.date.toISOString() : 'Invalid Date'}</Text>*/}
                     </TouchableOpacity>
                 )}
             />
