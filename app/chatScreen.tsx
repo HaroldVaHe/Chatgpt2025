@@ -12,29 +12,14 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore/lite';
 export default function ChatScreen() {
     const navigation = useNavigation();
     const route = useRoute();
+    const { chatId } = route.params as { chatId: string };
     const [message, setMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [messages, setMessages] = useState<Message[]>([]);
     const [error, setError] = useState('');
-    const [conversationId, setConversationId] = useState<string | null>(null);  // ID de la conversación en Firestore
+    const [conversationId, setConversationId] = useState<string | null>(chatId);
 
-    useEffect(() => {
-        const createConversation = async () => {
-            try {
-                const newConversationRef = await addDoc(collection(db, 'Conversations'), {
-                    Messages: [],
-                    date: Timestamp.fromDate(new Date()),
-                    key: Date.now().toString()
-                });
-                setConversationId(newConversationRef.id);
-            } catch (err) {
-                setError("Error al crear la conversación.");
-                console.error(err);
-            }
-        };
-
-        createConversation();
-    }, []);
+    
 
     useEffect(() => {
         const fetchMessages = async () => {
@@ -48,12 +33,18 @@ export default function ChatScreen() {
                     const data = conversationSnap.data();
                     const formattedMessages = data.Messages.map((msg: any) => ({
                         ...msg,
-                        date: msg.date instanceof Timestamp ? msg.date.toDate() : new Date()
+                        date: msg.date instanceof Timestamp ? msg.date.toDate() : new Date(msg.date)
                     }));
 
                     setMessages(formattedMessages);
                 } else {
-                    setError("No se encontró la conversación.");
+                    // Crear una nueva conversación si no existe
+                    const newConversationRef = await addDoc(collection(db, 'Conversations'), {
+                        Messages: [],
+                        date: Timestamp.fromDate(new Date()),
+                        key: Date.now().toString()
+                    });
+                    setConversationId(newConversationRef.id);
                 }
             } catch (err) {
                 setError("Error al obtener mensajes.");
