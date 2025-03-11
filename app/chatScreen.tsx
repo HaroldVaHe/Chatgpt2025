@@ -1,43 +1,104 @@
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { addDoc, collection, getDocs, Timestamp } from 'firebase/firestore/lite';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Text, TextInput, TouchableOpacity, View, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { Message } from '../interfaces/AppInterfaces';
-import { APIresponse } from '../interfaces/Responses';
+import { APIResponse } from '../interfaces/Responses';
 import { db } from '../utils/FirebaseConfig';
-
-interface MessageWithKey extends Message {
-    key: string;
-}
+import { router } from 'expo-router';
+import { doc, getDoc, updateDoc } from 'firebase/firestore/lite';
 
 export default function ChatScreen() {
     const navigation = useNavigation();
+    const route = useRoute();
     const [message, setMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [messages, setMessages] = useState<MessageWithKey[]>([]);
+    const [messages, setMessages] = useState<Message[]>([]);
     const [error, setError] = useState('');
+    const [conversationId, setConversationId] = useState<string | null>(null);  // ID de la conversación en Firestore
+
+    useEffect(() => {
+        const createConversation = async () => {
+            try {
+                const newConversationRef = await addDoc(collection(db, 'Conversations'), {
+                    Messages: [],
+                    date: Timestamp.fromDate(new Date()),
+                    key: Date.now().toString()
+                });
+                setConversationId(newConversationRef.id);
+            } catch (err) {
+                setError("Error al crear la conversación.");
+                console.error(err);
+            }
+        };
+
+        createConversation();
+    }, []);
 
     useEffect(() => {
         const fetchMessages = async () => {
-            const messagesSnapshot = await getDocs(collection(db, 'Conversations'));
-            const messagesList = messagesSnapshot.docs.map(doc => {
-                const data = doc.data() as MessageWithKey;
-                return { 
-                    ...data, 
-                    date: data.date instanceof Timestamp ? data.date.toDate() : new Date() 
-                };
-            });
-            setMessages(messagesList);
+            if (!conversationId) return;
+
+            try {
+                const conversationRef = doc(db, 'Conversations', conversationId);
+                const conversationSnap = await getDoc(conversationRef);
+                
+                if (conversationSnap.exists()) {
+                    const data = conversationSnap.data();
+                    const formattedMessages = data.Messages.map((msg: any) => ({
+                        ...msg,
+                        date: msg.date instanceof Timestamp ? msg.date.toDate() : new Date()
+                    }));
+
+                    setMessages(formattedMessages);
+                } else {
+                    setError("No se encontró la conversación.");
+                }
+            } catch (err) {
+                setError("Error al obtener mensajes.");
+                console.error(err);
+            }
         };
 
         fetchMessages();
-    }, []);
+    }, [conversationId]);
+
+    const sendMessage = async () => {
+        if (!message.trim() || !conversationId) return;
+
+        const newMessage: Message = {
+            text: message,
+            sender_by: 'Me',
+            date: new Date(),
+            key: Date.now().toString()
+        }; 
+        try {
+            const conversationRef = doc(db, 'Conversations', conversationId);
+            const conversationSnap = await getDoc(conversationRef);
+
+            if (conversationSnap.exists()) {
+                const data = conversationSnap.data();
+                const updatedMessages = [...data.Messages, newMessage];
+
+                await updateDoc(conversationRef, { Messages: updatedMessages });
+
+                setMessages(updatedMessages);
+            } else {
+                setError("No se encontró la conversación.");
+            }
+        } catch (err) {
+            setError("Error al enviar el mensaje.");
+            console.error(err);
+        }
+
+        setMessage('');
+    };
 
     const getResponse = async () => {
-        if (!message.trim()) return;
+        if (!message.trim() || !conversationId) return;
         
-        const newMessage: MessageWithKey = { text: message, senderby: 'Me', date: new Date(), key: Date.now().toString() };
+        const newMessage: Message = { text: message, sender_by: 'Me', date: new Date(), key: Date.now().toString() };
         setMessages(prevMessages => [...prevMessages, newMessage]);
         setMessage('');
         setIsLoading(true);
@@ -54,15 +115,24 @@ export default function ChatScreen() {
 
             if (!response.ok) throw new Error('Error en la respuesta del servidor');
             
-            const data: APIresponse = await response.json();
+            const data: APIResponse = await response.json();
             const botText = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'No response';
-            const botMessage: MessageWithKey = { text: botText, senderby: 'Bot', date: new Date(), key: Date.now().toString() };
+            const botMessage: Message = { text: botText, sender_by: 'Bot', date: new Date(), key: Date.now().toString() };
 
             setMessages(prevMessages => [...prevMessages, botMessage]);
 
             // Almacenar mensajes en Firestore
-            await addDoc(collection(db, 'Conversations'), { ...newMessage, date: Timestamp.fromDate(newMessage.date) });
-            await addDoc(collection(db, 'Conversations'), { ...botMessage, date: Timestamp.fromDate(botMessage.date) });
+            const conversationRef = doc(db, 'Conversations', conversationId);
+            const conversationSnap = await getDoc(conversationRef);
+
+            if (conversationSnap.exists()) {
+                const data = conversationSnap.data();
+                const updatedMessages = [...data.Messages, newMessage, botMessage];
+
+                await updateDoc(conversationRef, { Messages: updatedMessages });
+            } else {
+                setError("No se encontró la conversación.");
+            }
         } catch (error) {
             setError('Hubo un error al obtener la respuesta.');
             console.error('Error:', error);
@@ -75,7 +145,7 @@ export default function ChatScreen() {
         <View style={styles.container}>
             {/* Encabezado */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
+                <TouchableOpacity onPress={() => router.push("/dashboard")}>
                     <Icon name="arrow-left" size={24} color="white" />
                 </TouchableOpacity>
                 <Icon name="send" size={24} color="white" />
@@ -86,7 +156,7 @@ export default function ChatScreen() {
                 data={messages}
                 keyExtractor={(item, index) => item.text + index}
                 renderItem={({ item }) => (
-                    <View style={item.senderby === 'Me' ? styles.userMessage : styles.botMessage}>
+                    <View style={item.sender_by === 'Me' ? styles.userMessage : styles.botMessage}>
                         <Text style={styles.messageText}>{item.text}</Text>
                         <Text>{item.date.toISOString()}</Text>
                     </View>
@@ -117,10 +187,10 @@ export default function ChatScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+export const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: '#1e1e1e',
     },
     header: {
         flexDirection: 'row',
@@ -174,3 +244,4 @@ const styles = StyleSheet.create({
         marginLeft: 10,
     },
 });
+
