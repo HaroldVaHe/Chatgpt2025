@@ -23,37 +23,43 @@ export default function ChatScreen() {
 
     useEffect(() => {
         const fetchMessages = async () => {
-            if (!conversationId) return;
-
-            try {
-                const conversationRef = doc(db, 'Conversations', conversationId);
-                const conversationSnap = await getDoc(conversationRef);
-                
-                if (conversationSnap.exists()) {
-                    const data = conversationSnap.data();
-                    const formattedMessages = data.Messages.map((msg: any) => ({
-                        ...msg,
-                        date: msg.date instanceof Timestamp ? msg.date.toDate() : new Date(msg.date)
-                    }));
-
-                    setMessages(formattedMessages);
-                } else {
-                    // Crear una nueva conversación si no existe
+            if (!conversationId) {
+                try {
                     const newConversationRef = await addDoc(collection(db, 'Conversations'), {
                         Messages: [],
                         date: Timestamp.fromDate(new Date()),
                         key: Date.now().toString()
                     });
+                    
+                    // IMPORTANTE: Esperar a que se actualice el estado antes de continuar
                     setConversationId(newConversationRef.id);
+                    return; // Salir para que el efecto se vuelva a ejecutar con el nuevo conversationId
+                } catch (err) {
+                    setError("Error al crear la conversación.");
+                    console.error(err);
                 }
-            } catch (err) {
-                setError("Error al obtener mensajes.");
-                console.error(err);
+            } else {
+                try {
+                    const conversationRef = doc(db, 'Conversations', conversationId);
+                    const conversationSnap = await getDoc(conversationRef);
+                    
+                    if (conversationSnap.exists()) {
+                        const data = conversationSnap.data();
+                        const formattedMessages = data.Messages.map((msg: any) => ({
+                            ...msg,
+                            date: msg.date instanceof Timestamp ? msg.date.toDate() : new Date(msg.date)
+                        }));
+                        setMessages(formattedMessages);
+                    }
+                } catch (err) {
+                    setError("Error al obtener mensajes.");
+                    console.error(err);
+                }
             }
         };
-
+    
         fetchMessages();
-    }, [conversationId]);
+    }, [conversationId]); // Se ejecuta cuando conversationId cambia
 
     const sendMessage = async () => {
         if (!message.trim() || !conversationId) return;
