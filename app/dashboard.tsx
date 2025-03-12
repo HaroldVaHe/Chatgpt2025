@@ -1,8 +1,7 @@
-import { collection, getDocs, Timestamp } from 'firebase/firestore/lite';
+import { collection, getDocs, deleteDoc, doc, Timestamp } from 'firebase/firestore/lite';
 import React, { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
-import { Message } from '../interfaces/AppInterfaces';
 import { db, auth } from '../utils/FirebaseConfig';
 import { useRouter } from "expo-router";
 import { signOut } from "firebase/auth";
@@ -18,45 +17,47 @@ export default function Dashboard() {
     const router = useRouter();
 
     useEffect(() => {
-        const fetchChats = async () => {
-            const chatsSnapshot = await getDocs(collection(db, 'Conversations'));
-            const chatsMap = new Map<string, Chat>();
-
-            chatsSnapshot.docs.forEach(doc => {
-                const data = doc.data();
-                const chatId = doc.id; // Asumiendo que cada documento tiene un ID único
-
-                if (data.Messages && data.Messages.length > 0) {
-                    const firstMessage = data.Messages[0].text.split(' ').slice(0, 5).join(' ');
-                    chatsMap.set(chatId, {
-                        id: chatId,
-                        firstMessage: firstMessage,
-                        date: data.date instanceof Timestamp ? data.date.toDate() : new Date()
-                    });
-                }
-            });
-
-            setChats(Array.from(chatsMap.values()));
-        };
-
         fetchChats();
     }, []);
 
-    const isValidDate = (date: any) => {
-        return date instanceof Date && !isNaN(date.getTime());
+    const fetchChats = async () => {
+        const chatsSnapshot = await getDocs(collection(db, 'Conversations'));
+        const chatsMap = new Map<string, Chat>();
+
+        chatsSnapshot.docs.forEach(doc => {
+            const data = doc.data();
+            const chatId = doc.id;
+
+            if (data.Messages && data.Messages.length > 0) {
+                const firstMessage = data.Messages[0].text.split(' ').slice(0, 5).join(' ');
+                chatsMap.set(chatId, {
+                    id: chatId,
+                    firstMessage: firstMessage,
+                    date: data.date instanceof Timestamp ? data.date.toDate() : new Date()
+                });
+            }
+        });
+
+        setChats(Array.from(chatsMap.values()));
     };
 
-    // Función para cerrar sesión
+    const clearConversations = async () => {
+        try {
+            const chatsSnapshot = await getDocs(collection(db, 'Conversations'));
+            const deletePromises = chatsSnapshot.docs.map(docSnap => deleteDoc(doc(db, 'Conversations', docSnap.id)));
+            await Promise.all(deletePromises);
+            setChats([]); // Limpiar la lista en el estado
+        } catch (error) {
+            console.error("Error al eliminar conversaciones: ", error);
+        }
+    };
+
     const handleLogout = async () => {
         try {
             await signOut(auth);
-            router.replace("/"); // Redirige a la pantalla de login
+            router.replace("/");
         } catch (error) {
-            if (error instanceof Error) {
-                console.log("Error al cerrar sesión: ", error.message);
-            } else {
-                console.log("Error al cerrar sesión: ", error);
-            }
+            console.error("Error al cerrar sesión: ", error);
         }
     };
 
@@ -85,7 +86,7 @@ export default function Dashboard() {
             />
 
             {/* Opciones */}
-            <TouchableOpacity style={styles.option}>
+            <TouchableOpacity style={styles.option} onPress={clearConversations}>
                 <Icon name="trash-2" size={18} color="#fff" />
                 <Text style={styles.optionText}>Clear conversations</Text>
             </TouchableOpacity>
