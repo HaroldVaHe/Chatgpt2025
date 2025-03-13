@@ -1,10 +1,12 @@
 import { collection, getDocs, deleteDoc, doc, Timestamp } from 'firebase/firestore/lite';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { db, auth } from '../utils/FirebaseConfig';
 import { useRouter } from "expo-router";
 import { signOut } from "firebase/auth";
+import { ChatContext } from '@/context/chatContext/ChatContext';
+
 
 interface Chat {
     id: string;
@@ -15,6 +17,8 @@ interface Chat {
 export default function Dashboard() {
     const [chats, setChats] = useState<Chat[]>([]);
     const router = useRouter();
+    //const {fetchChats} = useContext(ChatContext);
+    
 
     useEffect(() => {
         fetchChats();

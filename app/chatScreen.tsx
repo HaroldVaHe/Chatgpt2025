@@ -1,6 +1,6 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { addDoc, collection, getDocs, Timestamp } from 'firebase/firestore/lite';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Text, TextInput, TouchableOpacity, View, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { Message } from '../interfaces/AppInterfaces';
@@ -8,6 +8,8 @@ import { APIResponse } from '../interfaces/Responses';
 import { db } from '../utils/FirebaseConfig';
 import { router } from 'expo-router';
 import { doc, getDoc, updateDoc } from 'firebase/firestore/lite';
+import { create } from 'react-test-renderer';
+import { ChatContext } from '@/context/chatContext/ChatContext';
 
 export default function ChatScreen() {
     const navigation = useNavigation();
@@ -19,19 +21,17 @@ export default function ChatScreen() {
     const [error, setError] = useState('');
     const [conversationId, setConversationId] = useState<string | null>(chatId);
     const apiKey = process.env.EXPO_PUBLIC_API_KEY;
+    const {createConversation , getConversation} = useContext(ChatContext);
+
 
     useEffect(() => {
         const fetchMessages = async () => {
             if (!conversationId) {
                 try {
-                    const newConversationRef = await addDoc(collection(db, 'Conversations'), {
-                        Messages: [],
-                        date: Timestamp.fromDate(new Date()),
-                        key: Date.now().toString()
-                    });
+                   const response = await createConversation();
                     
                     // IMPORTANTE: Esperar a que se actualice el estado antes de continuar
-                    setConversationId(newConversationRef.id);
+                    setConversationId(response);
                     return; // Salir para que el efecto se vuelva a ejecutar con el nuevo conversationId
                 } catch (err) {
                     setError("Error al crear la conversación.");
@@ -39,18 +39,11 @@ export default function ChatScreen() {
                 }
             } else {
                 try {
-                    const conversationRef = doc(db, 'Conversations', conversationId);
-                    const conversationSnap = await getDoc(conversationRef);
+                    const conversation = await getConversation(conversationId);
                     
-                    if (conversationSnap.exists()) {
-                        const data = conversationSnap.data();
-                        const formattedMessages = data.Messages.map((msg: any) => ({
-                            ...msg,
-                            date: msg.date instanceof Timestamp ? msg.date.toDate() : new Date(msg.date)
-                        }));
-                        setMessages(formattedMessages);
+                        setMessages(conversation);
                     }
-                } catch (err) {
+                 catch (err) {
                     setError("Error al obtener mensajes.");
                     console.error(err);
                 }
