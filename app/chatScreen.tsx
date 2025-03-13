@@ -18,8 +18,7 @@ export default function ChatScreen() {
     const [messages, setMessages] = useState<Message[]>([]);
     const [error, setError] = useState('');
     const [conversationId, setConversationId] = useState<string | null>(chatId);
-
-    
+    const apiKey = process.env.EXPO_PUBLIC_API_KEY;
 
     useEffect(() => {
         const fetchMessages = async () => {
@@ -92,7 +91,7 @@ export default function ChatScreen() {
         setMessage('');
     };
 
-    const getResponse = async () => {
+    const getResponse = async () => {  
         if (!message.trim() || !conversationId) return;
         
         const newMessage: Message = { text: message, sender_by: 'Me', date: new Date(), key: Date.now().toString() };
@@ -102,7 +101,7 @@ export default function ChatScreen() {
         setError('');
 
         try {
-            const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyCZnhY405xJl-ZCNt9Af5V6QLGr4rFhfAM', {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
