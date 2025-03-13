@@ -6,24 +6,19 @@ import { db, auth } from '../utils/FirebaseConfig';
 import { useRouter } from "expo-router";
 import { signOut } from "firebase/auth";
 import { ChatContext } from '@/context/chatContext/ChatContext';
+import { AuthContext } from '@/context/authContext/AuthContext';
 
 
 export default function Dashboard() {
     const router = useRouter();
     const {fetchChats,chats, clearConversations} = useContext(ChatContext);
+    const {handleLogout} = useContext(AuthContext);
+
     
     useEffect(() => {
         fetchChats();
     }, []);
 
-    const handleLogout = async () => {
-        try {
-            await signOut(auth);
-            router.replace("/");
-        } catch (error) {
-            console.error("Error al cerrar sesión: ", error);
-        }
-    };
 
     return (
         <View style={styles.container}>
