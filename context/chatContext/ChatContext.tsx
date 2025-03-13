@@ -1,5 +1,5 @@
 import { db } from '@/utils/FirebaseConfig';
-import { addDoc, collection, doc, getDoc, getDocs, Timestamp } from 'firebase/firestore/lite';
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, Timestamp } from 'firebase/firestore/lite';
 import { createContext, useState } from 'react';
 interface Chat {
     id: string;
@@ -12,6 +12,7 @@ interface ChatContextProps {
     fetchChats: () => Promise<any>;
     chats: Chat[];
     setChats: (chats: Chat[]) => void;
+    clearConversations: () => Promise<any>;
 }
 
 export const ChatContext = createContext({} as ChatContextProps);
@@ -79,6 +80,17 @@ export const ChatProvider = ({ children }:any)=> {
                 }
             }
 
+        //const clearConversations -> deleteAllElements
+        const clearConversations = async () => {
+                try {
+                    const chatsSnapshot = await getDocs(collection(db, 'Conversations'));
+                    const deletePromises = chatsSnapshot.docs.map(docSnap => deleteDoc(doc(db, 'Conversations', docSnap.id)));
+                    await Promise.all(deletePromises);
+                    setChats([]); // Limpiar la lista en el estado
+                } catch (error) {
+                    console.error("Error al eliminar conversaciones: ", error);
+                }
+            };
 
 
     return <ChatContext.Provider 
@@ -87,7 +99,8 @@ export const ChatProvider = ({ children }:any)=> {
         getConversation, 
         fetchChats,
         chats,
-        setChats
+        setChats,
+        clearConversations
     }}
     >{children}</ChatContext.Provider>
 }

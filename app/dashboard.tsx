@@ -8,32 +8,13 @@ import { signOut } from "firebase/auth";
 import { ChatContext } from '@/context/chatContext/ChatContext';
 
 
-interface Chat {
-    id: string;
-    firstMessage: string;
-    date: Date;
-}
-
 export default function Dashboard() {
     const router = useRouter();
-    const {fetchChats,chats, setChats} = useContext(ChatContext);
+    const {fetchChats,chats, clearConversations} = useContext(ChatContext);
     
-
     useEffect(() => {
         fetchChats();
     }, []);
-
-
-    const clearConversations = async () => {
-        try {
-            const chatsSnapshot = await getDocs(collection(db, 'Conversations'));
-            const deletePromises = chatsSnapshot.docs.map(docSnap => deleteDoc(doc(db, 'Conversations', docSnap.id)));
-            await Promise.all(deletePromises);
-            setChats([]); // Limpiar la lista en el estado
-        } catch (error) {
-            console.error("Error al eliminar conversaciones: ", error);
-        }
-    };
 
     const handleLogout = async () => {
         try {
