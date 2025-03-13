@@ -15,35 +15,14 @@ interface Chat {
 }
 
 export default function Dashboard() {
-    const [chats, setChats] = useState<Chat[]>([]);
     const router = useRouter();
-    //const {fetchChats} = useContext(ChatContext);
+    const {fetchChats,chats, setChats} = useContext(ChatContext);
     
 
     useEffect(() => {
         fetchChats();
     }, []);
 
-    const fetchChats = async () => {
-        const chatsSnapshot = await getDocs(collection(db, 'Conversations'));
-        const chatsMap = new Map<string, Chat>();
-
-        chatsSnapshot.docs.forEach(doc => {
-            const data = doc.data();
-            const chatId = doc.id;
-
-            if (data.Messages && data.Messages.length > 0) {
-                const firstMessage = data.Messages[0].text.split(' ').slice(0, 5).join(' ');
-                chatsMap.set(chatId, {
-                    id: chatId,
-                    firstMessage: firstMessage,
-                    date: data.date instanceof Timestamp ? data.date.toDate() : new Date()
-                });
-            }
-        });
-
-        setChats(Array.from(chatsMap.values()));
-    };
 
     const clearConversations = async () => {
         try {
