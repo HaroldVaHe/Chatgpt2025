@@ -1,4 +1,4 @@
-import { auth, db } from 'utils/FirebaseConfig';
+import { auth, db } from '@utils/FirebaseConfig';
 import { useRouter } from 'expo-router';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { createContext, useState } from 'react';

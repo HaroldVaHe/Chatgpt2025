@@ -1,4 +1,4 @@
-import { db } from 'utils/FirebaseConfig';
+import { db } from '@utils/FirebaseConfig';
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, Timestamp } from 'firebase/firestore/lite';
 import { createContext, useState } from 'react';
 interface Chat {
