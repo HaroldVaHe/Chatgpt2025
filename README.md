@@ -1,50 +1,126 @@
-# Welcome to your Expo app 👋
+# Chat App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## Descripción
 
-## Get started
+Este es un proyecto de aplicación de chat en tiempo real desarrollado con **React Native**, **Expo Router**, **Firebase** y una integración con **Gemini API** para respuestas automáticas. La aplicación permite la autenticación de usuarios, la gestión de conversaciones y el almacenamiento de mensajes en Firestore.
 
-1. Install dependencies
+## Tecnologías utilizadas
 
-   ```bash
-   npm install
-   ```
+- **React Native** (Expo)
+- **Firebase Firestore** (Base de datos)
+- **Firebase Authentication** (Autenticación de usuarios)
+- **Expo Router** (Navegación)
+- **React Context API** (Manejo de estado global)
+- **Gemini API** (Generación de respuestas automáticas)
 
-2. Start the app
+## Instalación y configuración
 
-   ```bash
-    npx expo start
-   ```
+### 1. Clonar el repositorio
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```sh
+ git clone https://github.com/tu-repo/chat-app.git
+ cd chat-app
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 2. Instalar dependencias
 
-## Learn more
+```sh
+npm install
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+### 3. Configurar Firebase
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+1. Crear un proyecto en Firebase.
+2. Habilitar **Authentication** con el proveedor de Google.
+3. Crear una base de datos Firestore y una colección llamada `Conversations`.
+4. Obtener el archivo `google-services.json` y colocarlo en `./android/app/`.
+5. Configurar la clave de API de Firebase en un archivo de entorno `.env`:
 
-## Join the community
+```env
+EXPO_PUBLIC_API_KEY_DB=TU_CLAVE_DE_API
+EXPO_PUBLIC_API_KEY=TU_CLAVE_DE_API_GEMINI
+```
 
-Join our community of developers creating universal apps.
+### 4. Iniciar la aplicación
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```sh
+npm run start
+```
+
+## Estructura del proyecto
+
+```
+app/
+├── _layout.tsx  # Configuración de la navegación
+├── index.tsx  # Pantalla de inicio (Login)
+├── splashscreen.tsx  # Pantalla de carga inicial
+├── chatScreen.tsx  # Pantalla del chat
+├── dashboard.tsx  # Panel principal
+context/
+├── authContext/AuthContext.tsx  # Contexto de autenticación
+├── chatContext/ChatContext.tsx  # Contexto del chat
+interfaces/
+├── AppInterfaces.ts  # Interfaces de los mensajes
+├── Responses.ts  # Interfaces para la API
+utils/
+├── FirebaseConfig.ts  # Configuración de Firebase
+```
+
+## Funcionalidades principales
+
+- **Inicio de sesión con Google**.
+- **Gestión de conversaciones** con Firestore.
+- **Mensajería en tiempo real**.
+- **Generación de respuestas automáticas** con Gemini API.
+- **Persistencia de datos en Firebase Firestore**.
+- **Navegación entre pantallas** con Expo Router.
+
+## API de Gemini
+
+La aplicación utiliza la API de Gemini para generar respuestas automáticas en la conversación.
+
+Ejemplo de solicitud a la API:
+
+```ts
+const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        "contents": [{ "parts": [{ "text": mensajeUsuario }] }]
+    })
+});
+```
+
+## Autenticación con Firebase
+
+Se implementa Firebase Authentication para la gestión de usuarios mediante Google.
+
+Ejemplo de inicio de sesión:
+
+```ts
+const signInWithGoogle = async () => {
+    try {
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(auth, provider);
+    } catch (error) {
+        console.error("Error en el inicio de sesión", error);
+    }
+};
+```
+
+## Estado Global con Context API
+
+Se utilizan los **AuthContext** y **ChatContext** para gestionar la autenticación y las conversaciones globalmente.
+
+## Estilos y UI
+
+La interfaz de usuario está diseñada con **React Native StyleSheet**, utilizando colores oscuros y una estructura simple para la experiencia de usuario.
+
+## Contribuciones
+
+¡Las contribuciones son bienvenidas! Si deseas mejorar este proyecto, puedes hacer un **fork** y enviar un **pull request**.
+
+## Licencia
+
+Este proyecto está bajo la licencia MIT.
+
