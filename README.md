@@ -37,7 +37,7 @@ npm install
 5. Configurar la clave de API de Firebase en un archivo de entorno `.env`:
 
 ```env
-EXPO_PUBLIC_API_KEY_DB=TU_CLAVE_DE_API
+EXPO_PUBLIC_API_KEY_DB=TU_CLAVE_DE_API_FIREBASE
 EXPO_PUBLIC_API_KEY=TU_CLAVE_DE_API_GEMINI
 ```
 
