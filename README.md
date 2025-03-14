@@ -1,4 +1,4 @@
-# Chat App
+# ChatGPT2025
 
 ## Descripción
 
@@ -120,7 +120,4 @@ La interfaz de usuario está diseñada con **React Native StyleSheet**, utilizan
 
 ¡Las contribuciones son bienvenidas! Si deseas mejorar este proyecto, puedes hacer un **fork** y enviar un **pull request**.
 
-## Licencia
-
-Este proyecto está bajo la licencia MIT.
 
