@@ -18,7 +18,7 @@ Este es un proyecto de aplicación de chat en tiempo real desarrollado con **Rea
 ### 1. Clonar el repositorio
 
 ```sh
- git clone https://github.com/tu-repo/chat-app.git
+ git clone https://github.com/HaroldVaHe/Chatgpt2025.git
  cd chat-app
 ```
 
