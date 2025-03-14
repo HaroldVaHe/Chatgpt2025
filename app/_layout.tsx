@@ -1,5 +1,5 @@
-import { AuthProvider } from "@/context/authContext/AuthContext";
-import { ChatProvider } from "@/context/chatContext/ChatContext";
+import { AuthProvider } from "../context/authContext/AuthContext";
+import { ChatProvider } from "../context/chatContext/ChatContext";
 import { Stack } from "expo-router";
 
 export default function RootLayout() {

@@ -1,5 +1,4 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { addDoc, collection, getDocs, Timestamp } from 'firebase/firestore/lite';
 import React, { useContext, useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Text, TextInput, TouchableOpacity, View, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
@@ -8,8 +7,7 @@ import { APIResponse } from '../interfaces/Responses';
 import { db } from '../utils/FirebaseConfig';
 import { router } from 'expo-router';
 import { doc, getDoc, updateDoc } from 'firebase/firestore/lite';
-import { create } from 'react-test-renderer';
-import { ChatContext } from '@/context/chatContext/ChatContext';
+import { ChatContext } from '../context/chatContext/ChatContext';
 
 export default function ChatScreen() {
     const navigation = useNavigation();

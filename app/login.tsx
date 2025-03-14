@@ -1,28 +1,10 @@
-import { auth } from "@/utils/FirebaseConfig";
-import { useRouter } from "expo-router";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { useState } from "react";
+import { AuthContext } from "../context/authContext/AuthContext";
+import { useContext } from "react";
 import { View, TextInput, Button, Text, StyleSheet } from "react-native";
 
 export default function Login() {
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-
-  const login = async () => {
-    try {
-      setError(""); // Resetear error antes del intento de login
-      const response = await signInWithEmailAndPassword(auth, email, password);
-      console.log({ response: response.user });
-      if (response.user) {
-        router.push("/chatScreen");
-      }
-    } catch (error: any) {
-      console.log("Error Login: ", error.message);
-      setError("Correo o contraseña incorrectos"); // Mensaje de error amigable
-    }
-  };
+      const {handleLogin, email, setEmail, password, setPassword, error} = useContext(AuthContext);
+  
 
   return (
     <View style={styles.container}>
@@ -49,7 +31,7 @@ export default function Login() {
 
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-      <Button title="Login" onPress={login} color="#18c37d" />
+      <Button title="Login" onPress={handleLogin} color="#18c37d" />
     </View>
   );
 }
