@@ -13,11 +13,11 @@ export default function ChatScreen() {
     const navigation = useNavigation();
     const route = useRoute();
     const { chatId } = route.params as { chatId: string };
+    const [conversationId, setConversationId] = useState<string | null>(chatId);
     const [message, setMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [messages, setMessages] = useState<Message[]>([]);
     const [error, setError] = useState('');
-    const [conversationId, setConversationId] = useState<string | null>(chatId);
     const apiKey = process.env.EXPO_PUBLIC_API_KEY;
     const {createConversation , getConversation} = useContext(ChatContext);
 
