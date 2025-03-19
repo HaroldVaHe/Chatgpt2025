@@ -93,19 +93,24 @@ const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/m
 
 ## Autenticación con Firebase
 
-Se implementa Firebase Authentication para la gestión de usuarios mediante Google.
+Se implementa Firebase Authentication para la gestión de usuarios mediante correo y contraseña.
 
 Ejemplo de inicio de sesión:
 
 ```ts
-const signInWithGoogle = async () => {
-    try {
-        const provider = new GoogleAuthProvider();
-        await signInWithPopup(auth, provider);
-    } catch (error) {
-        console.error("Error en el inicio de sesión", error);
-    }
-};
+const handleLogin = async () => {
+                    try {
+                      setError(""); // Resetear error antes del intento de login
+                      const response = await signInWithEmailAndPassword(auth, email, password);
+                      console.log({ response: response.user });
+                      if (response.user) {
+                        router.push("/chatScreen");
+                      }
+                    } catch (error: any) {
+                      console.log("Error Login: ", error.message);
+                      setError("Correo o contraseña incorrectos"); // Mensaje de error amigable
+                    }
+                  };
 ```
 
 ## Estado Global con Context API
